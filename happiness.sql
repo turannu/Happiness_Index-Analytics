@@ -1,0 +1,115 @@
+
+-- ============================================================
+-- WORLD HAPPINESS REPORT — SQLite Cleaning Script
+-- ============================================================
+-- HOW TO IMPORT (run this in your terminal first):
+--   sqlite3 happiness.db
+--   .mode csv
+--   .headers on
+--   .import happiness.csv happiness
+--   .quit
+-- Then run this entire file:
+--   sqlite3 happiness.db < happiness_cleaning.sql
+-- ============================================================
+--import the happiness.csv file into a table named happiness in the database using terminal command
+select * from happiness ;
+--couting the number of rows in the happiness table
+SELECT count(*) FROM happiness ;
+-- Create a backup copy of the happiness table
+CREATE TABLE happinesscopy AS SELECT * FROM happiness ;
+SELECT * FROM happinesscopy ;
+-- Verify the copy was created
+SELECT count(*) FROM happinesscopy ;
+--Cleaning:-
+--First thing — confirm exactly how many rows and columns you have
+select 
+count(*) as total_rows,
+count(distinct country) as unique_countries,
+count(distinct year) as unique_years,
+min(year) as earliest_year,
+max(year) as latest_year
+from happinesscopy ;
+--checking for missing values as csv files says 2005-2025 but earliest year is 2011 and latest year is 2023
+--created temporary table and joined with happinesscopy to find the missing years in the happiness table
+CREATE TABLE missing_table (year int);
+insert into missing_table (year) values (2005),(2006),(2007),(2008),(2009),(2010),(2011),(2012),(2013),(2014),(2015),(2016),(2017),(2018),(2019),(2020),(2021),(2022),(2023),(2024),(2025);
+select DISTINCT(mt.year)
+from missing_table as mt
+left join happinesscopy as ha on ha.year = mt.year
+where ha.year is null;
+--- Result: 2005,2006,2007,2008,2009,2010,2013 are missing
+-- These years were never collected
+-- Next checking null values
+
+SELECT
+    COUNT(*) AS total_rows,
+    (COUNT(*) - COUNT(distinct country)) AS missing_country,
+    COUNT(*) - COUNT(happiness_score) AS missing_happiness_score,
+    COUNT(*) - COUNT(lower_whisker) AS missing_lower_whisker,
+    COUNT(*) - COUNT(upper_whisker) AS missing_upper_whisker,
+
+    COUNT(*) - COUNT(explained_log_gdp_per_capita) AS missing_gdp,
+    COUNT(*) - COUNT(explained_social_support) AS missing_social_support,
+    COUNT(*) - COUNT(explained_healthy_life_expectancy) AS missing_health,
+    COUNT(*) - COUNT(explained_freedom) AS missing_freedom,
+    COUNT(*) - COUNT(explained_generosity) AS missing_generosity,
+    COUNT(*) - COUNT(explained_corruption) AS missing_corruption
+
+FROM happinesscopy;
+-- Result: 0 missing country, 0 missing happiness_score, 0 missing lower_whisker, 0 missing upper_whisker, 0 missing gdp, 0 missing social_support, 0 missing health, 0 missing freedom, 0 missing generosity, 0 missing corruption
+-- Next checking for empty strings in the lower_whisker column(sampling to see why lower_whisker has 0 missing values but there are empty strings in the column)
+select count(*) from happinesscopy
+where lower_whisker ='';
+FROM happinesscopy; 
+
+select count(*) from happinesscopy
+where lower_whisker is null
+-- update the lower_whisker column to null where there are empty strings
+update happinesscopy
+set lower_whisker = null
+where lower_whisker ='';
+--updating the upper whisker,explained_log_gdp_per_capita, explained_social_support, explained_healthy_life_expectancy, explained_freedom, explained_generosity, explained_corruption columns to null where there are empty strings
+update happinesscopy
+set
+    upper_whisker = case when upper_whisker = '' then null else upper_whisker end,
+    explained_log_gdp_per_capita = case when explained_log_gdp_per_capita = '' then null else explained_log_gdp_per_capita end,
+    explained_social_support = case when explained_social_support = '' then null else explained_social_support end,
+    explained_healthy_life_expectancy = case when explained_healthy_life_expectancy = '' then null else explained_healthy_life_expectancy end,
+    explained_freedom = case when explained_freedom = '' then null else explained_freedom end,
+    explained_generosity = case when explained_generosity = '' then null else explained_generosity end,
+    explained_corruption = case when explained_corruption = '' then null else explained_corruption end;
+
+--checking again for missing values after updating empty strings to null
+
+SELECT
+    COUNT(*) AS total_rows,
+    (COUNT(*) - COUNT(distinct country)) AS missing_country,
+    COUNT(*) - COUNT(happiness_score) AS missing_happiness_score,
+    COUNT(*) - COUNT(lower_whisker) AS missing_lower_whisker,
+    COUNT(*) - COUNT(upper_whisker) AS missing_upper_whisker,
+    COUNT(*) - COUNT(explained_log_gdp_per_capita) AS missing_gdp,
+    COUNT(*) - COUNT(explained_social_support) AS missing_social_support,
+    COUNT(*) - COUNT(explained_healthy_life_expectancy) AS missing_health,
+    COUNT(*) - COUNT(explained_freedom) AS missing_freedom,
+    COUNT(*) - COUNT(explained_generosity) AS missing_generosity,
+    COUNT(*) - COUNT(explained_corruption) AS missing_corruption
+
+FROM happinesscopy;
+--result:0 missing country,1094 missing lower_whisker, 1103 missing upper_whisker, 1103 missing gdp, 1103 missing social_support,1103 missing health, 1103 missing freedom, 1103 missing generosity,1103 missing corruption  
+-- Next checking the distribution of missing values across years to see if there are any patterns in the missing data
+SELECT
+    year,
+    count(*)                                                        AS total_rows,
+    SUM(CASE WHEN lower_whisker IS NULL THEN 1 ELSE 0 END)          AS null_lower_whisker,
+    SUM(CASE WHEN upper_whisker IS NULL THEN 1 ELSE 0 END)          AS null_upper_whisker,
+    SUM(CASE WHEN explained_log_gdp_per_capita IS NULL THEN 1 ELSE 0 END) AS null_gdp,
+    SUM(CASE WHEN explained_social_support IS NULL THEN 1 ELSE 0 END)     AS null_social,
+    SUM(CASE WHEN explained_healthy_life_expectancy IS NULL THEN 1 ELSE 0 END) AS null_health,
+    SUM(CASE WHEN explained_freedom IS NULL THEN 1 ELSE 0 END)      AS null_freedom,
+    SUM(CASE WHEN explained_generosity IS NULL THEN 1 ELSE 0 END)   AS null_generosity,
+    SUM(CASE WHEN explained_corruption IS NULL THEN 1 ELSE 0 END)   AS null_corruption,
+    SUM(CASE WHEN dystopia_plus_residual IS NULL THEN 1 ELSE 0 END) AS null_dystopia
+FROM happinesscopy
+GROUP BY year
+ORDER BY year;         
+-- it shows that till 2019 factor columns gdp,hapiness_score, social_support, health, freedom, generosity, corruption have  missing values but from 2019 to 2025 there are only few missing values in these columns which means hapiness report started collecting data for these factors from 2019 and before that they were not collected which is why there are many missing values in these columns before 2019
