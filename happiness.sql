@@ -157,4 +157,17 @@ WHERE
     country = 'Afghanistan';
     --2019(Coronavirus) is the biggest drop in happiness score happened and second hit was 2022(Tabliban TAke OVEr)
     --2025 is the highest happiness score for Afghanistan in 13 years but it is still very low compared to other countries
-    
+
+--let's find out the most happiest country in the world for each year
+-- which country has the lowest happiness score for each year.
+select 
+    year,
+    country,
+    max(happiness_score) AS max_happiness_score
+from happinesscopy
+group by year
+order by year DESC, max_happiness_score DESC;
+--Finland has the highest happiness score for most of the years(from 2017 to 2025)
+
+--Afghanistan — started at 4.2, crashed to 1.3, driven by real world events
+--Finland — locked between 7.6 and 7.8, consistent, stable, unmoved by global events
