@@ -113,3 +113,48 @@ FROM happinesscopy
 GROUP BY year
 ORDER BY year;         
 -- it shows that till 2019 factor columns gdp,hapiness_score, social_support, health, freedom, generosity, corruption have  missing values but from 2019 to 2025 there are only few missing values in these columns which means hapiness report started collecting data for these factors from 2019 and before that they were not collected which is why there are many missing values in these columns before 2019
+--global trends in happiness scores over time
+SELECT
+    year,
+    min(happiness_score) AS min_happiness_score,
+    avg(happiness_score) AS avg_happiness_score,
+    max(happiness_score) AS max_happiness_score
+FROM happinesscopy
+group by year
+order by year ;
+-- it shows that the average happiness score has been increasing over time, with a slight dip in 2020, likely due to the COVID-19 pandemic. The minimum is going down and maximum happiness scores have also generally increased over time, indicating that overall happiness levels have been improving globally.
+-- which country has the lowest happiness score for each year.
+select 
+    year,
+    country,
+    min(happiness_score) AS min_happiness_score
+from happinesscopy
+group by year
+order by year DESC, min_happiness_score;
+--it shows afghanistan has the lowest happiness score for most of the years(from 2019 to 2025)
+-- lets find out the whole journey of afghanistan's happiness score over the years
+SELECT
+    year,
+    country,
+    happiness_score
+FROM happinesscopy
+WHERE country = 'Afghanistan'
+ORDER BY year;
+--we want to analyze whether the hapiiness index of afghanistand is increasing or decreasing ot by how much--that can be done by analyzing the change in total quantity of the consecutive indexes of afghanistan
+--we will use lag function
+
+SELECT
+    year,
+    country,
+    happiness_score,
+    happiness_score - LAG(happiness_score, 1) OVER(
+        PARTITION BY country 
+        ORDER BY year
+    ) AS change_in_happiness_score
+FROM 
+    happinesscopy
+WHERE 
+    country = 'Afghanistan';
+    --2019(Coronavirus) is the biggest drop in happiness score happened and second hit was 2022(Tabliban TAke OVEr)
+    --2025 is the highest happiness score for Afghanistan in 13 years but it is still very low compared to other countries
+    
