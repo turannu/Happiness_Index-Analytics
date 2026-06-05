@@ -209,3 +209,11 @@ LIMIT 15;
 
 --  drop the helper table created mid-script for year gap detection
 DROP TABLE IF EXISTS missing_table;
+
+--Export your cleaned happinesscopy table from SQLite to CSV:
+-- sqlite3 happiness.db
+ -- .mode csv
+ -- .headers on
+--.output happiness_cleaned.csv
+ -- SELECT * FROM happinesscopy;
+  --.quit
