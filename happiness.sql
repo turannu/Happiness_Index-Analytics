@@ -207,5 +207,5 @@ LIMIT 15;
 -- Countries at the top are happier than their GDP alone predicts
 -- Countries at the bottom are underperforming relative to their wealth
 
--- ⚠️ CHANGE 5: drop the helper table created mid-script for year gap detection
+--  drop the helper table created mid-script for year gap detection
 DROP TABLE IF EXISTS missing_table;
