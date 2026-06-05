@@ -40,30 +40,27 @@ where ha.year is null;
 --- Result: 2005,2006,2007,2008,2009,2010,2013 are missing
 -- These years were never collected
 -- Next checking null values
-
 SELECT
     COUNT(*) AS total_rows,
-    (COUNT(*) - COUNT(distinct country)) AS missing_country,
+    SUM(CASE WHEN country IS NULL OR country = '' THEN 1 ELSE 0 END) AS missing_country,
     COUNT(*) - COUNT(happiness_score) AS missing_happiness_score,
     COUNT(*) - COUNT(lower_whisker) AS missing_lower_whisker,
     COUNT(*) - COUNT(upper_whisker) AS missing_upper_whisker,
-
     COUNT(*) - COUNT(explained_log_gdp_per_capita) AS missing_gdp,
     COUNT(*) - COUNT(explained_social_support) AS missing_social_support,
     COUNT(*) - COUNT(explained_healthy_life_expectancy) AS missing_health,
     COUNT(*) - COUNT(explained_freedom) AS missing_freedom,
     COUNT(*) - COUNT(explained_generosity) AS missing_generosity,
     COUNT(*) - COUNT(explained_corruption) AS missing_corruption
-
 FROM happinesscopy;
 -- Result: 0 missing country, 0 missing happiness_score, 0 missing lower_whisker, 0 missing upper_whisker, 0 missing gdp, 0 missing social_support, 0 missing health, 0 missing freedom, 0 missing generosity, 0 missing corruption
+
 -- Next checking for empty strings in the lower_whisker column(sampling to see why lower_whisker has 0 missing values but there are empty strings in the column)
 select count(*) from happinesscopy
 where lower_whisker ='';
 
-
 select count(*) from happinesscopy
-where lower_whisker is null
+where lower_whisker is null;
 -- update the lower_whisker column to null where there are empty strings
 update happinesscopy
 set lower_whisker = null
@@ -159,7 +156,7 @@ WHERE
     --2025 is the highest happiness score for Afghanistan in 13 years but it is still very low compared to other countries
 
 --let's find out the most happiest country in the world for each year
--- which country has the lowest happiness score for each year.
+
 select 
     year,
     country,
@@ -195,3 +192,20 @@ order by year, explained_log_gdp_per_capita DESC;
 --Luxembourg has the highest GDP (1.536) but happiness score is 7.23 — not the highest.
 --Finland has lower GDP (1.285) but happiness score is 7.80 — one of the highest!
 --no clear correlation between GDP and happiness score, other factors must be at play.
+
+-- ranks countries by how much happier they are beyond what GDP alone predicts
+SELECT
+    country,
+    ROUND(AVG(explained_log_gdp_per_capita), 3) AS avg_gdp_contribution,
+    ROUND(AVG(happiness_score), 3) AS avg_happiness,
+    ROUND(AVG(happiness_score) - AVG(explained_log_gdp_per_capita), 3) AS happiness_beyond_gdp
+FROM happinesscopy
+WHERE explained_log_gdp_per_capita IS NOT NULL
+GROUP BY country
+ORDER BY happiness_beyond_gdp DESC
+LIMIT 15;
+-- Countries at the top are happier than their GDP alone predicts
+-- Countries at the bottom are underperforming relative to their wealth
+
+-- ⚠️ CHANGE 5: drop the helper table created mid-script for year gap detection
+DROP TABLE IF EXISTS missing_table;
