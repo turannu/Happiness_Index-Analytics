@@ -60,7 +60,7 @@ FROM happinesscopy;
 -- Next checking for empty strings in the lower_whisker column(sampling to see why lower_whisker has 0 missing values but there are empty strings in the column)
 select count(*) from happinesscopy
 where lower_whisker ='';
-FROM happinesscopy; 
+
 
 select count(*) from happinesscopy
 where lower_whisker is null
@@ -120,17 +120,17 @@ SELECT
     avg(happiness_score) AS avg_happiness_score,
     max(happiness_score) AS max_happiness_score
 FROM happinesscopy
-group by year
-order by year ;
+GROUP BY year
+ORDER BY year ;
 -- it shows that the average happiness score has been increasing over time, with a slight dip in 2020, likely due to the COVID-19 pandemic. The minimum is going down and maximum happiness scores have also generally increased over time, indicating that overall happiness levels have been improving globally.
 -- which country has the lowest happiness score for each year.
-select 
+SELECT 
     year,
     country,
     min(happiness_score) AS min_happiness_score
 from happinesscopy
-group by year
-order by year DESC, min_happiness_score;
+GROUP BY year
+ORDER BY year DESC, min_happiness_score;
 --it shows afghanistan has the lowest happiness score for most of the years(from 2019 to 2025)
 -- lets find out the whole journey of afghanistan's happiness score over the years
 SELECT
@@ -171,3 +171,27 @@ order by year DESC, max_happiness_score DESC;
 
 --Afghanistan — started at 4.2, crashed to 1.3, driven by real world events
 --Finland — locked between 7.6 and 7.8, consistent, stable, unmoved by global events
+
+--how many years was each country in the top 10?
+SELECT
+    country,
+    COUNT(*) AS years_in_top_10
+
+    FROM HAPPINESSCOPY
+WHERE rank_in_year <= 10
+GROUP BY country
+ORDER BY years_in_top_10 DESC, country;
+-- Nordic countries consistently the happiest
+
+--does richer countries have higher happiness scores?
+SELECT
+    year,
+    country,
+    happiness_score,
+    explained_log_gdp_per_capita    
+FROM happinesscopy
+WHERE explained_log_gdp_per_capita IS NOT NULL
+order by year, explained_log_gdp_per_capita DESC;
+--Luxembourg has the highest GDP (1.536) but happiness score is 7.23 — not the highest.
+--Finland has lower GDP (1.285) but happiness score is 7.80 — one of the highest!
+--no clear correlation between GDP and happiness score, other factors must be at play.
