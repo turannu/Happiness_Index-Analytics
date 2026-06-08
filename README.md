@@ -82,7 +82,7 @@ sqlite3 happiness.db < happiness_cleaning.sql
 
 ---
 ## Dashboard
-[View on Tableau Public]((https://public.tableau.com/app/profile/neetu.turan/vizzes))
+[View on Tableau Public]https://public.tableau.com/app/profile/neetu.turan/vizzes
 ## Files
 
 | File | Description |
