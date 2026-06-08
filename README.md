@@ -81,7 +81,8 @@ sqlite3 happiness.db < happiness_cleaning.sql
 - **Structural missingness** (pre-2019 factor data) is not a data quality issue but a collection design choice — important to document rather than impute
 
 ---
-
+## Dashboard
+[View on Tableau Public]((https://public.tableau.com/app/profile/neetu.turan/vizzes))
 ## Files
 
 | File | Description |
